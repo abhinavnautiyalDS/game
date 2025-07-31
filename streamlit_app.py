@@ -127,6 +127,21 @@ st.markdown("""
         z-index: 1000;
     }
     
+    .draw-banner {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin: 2rem 0;
+        animation: fade 2s infinite;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+    }
+    
     @keyframes celebrate {
         0% { transform: translate(-50%, -50%) scale(1); }
         50% { transform: translate(-50%, -50%) scale(1.1); }
@@ -137,6 +152,12 @@ st.markdown("""
         0% { transform: translate(-50%, -50%) scale(1); }
         50% { transform: translate(-50%, -50%) scale(0.9); }
         100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    @keyframes fade {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
     }
     
     .stButton > button {
@@ -324,8 +345,10 @@ def initialize_game():
         st.session_state.game_start_time = None
     if 'winner' not in st.session_state:
         st.session_state.winner = None
-    if 'ai_thinking' not in st.session_state:
-        st.session_state.ai_thinking = False
+    if 'attempt_count' not in st.session_state:
+        st.session_state.attempt_count = 0
+    if 'current_clue_index' not in st.session_state:
+        st.session_state.current_clue_index = 0
 
 def start_new_game(difficulty: str):
     """Start a new game with selected difficulty"""
@@ -340,56 +363,54 @@ def start_new_game(difficulty: str):
     st.session_state.feedback_type = ""
     st.session_state.game_start_time = time.time()
     st.session_state.winner = None
-    st.session_state.ai_thinking = False
+    st.session_state.attempt_count = 0
+    st.session_state.current_clue_index = 0
 
 def check_winner():
-    """Check if there's a winner"""
-    if st.session_state.player_score >= 20:
-        st.session_state.winner = "Player"
-        return True
-    elif st.session_state.ai_score >= 20:
-        st.session_state.winner = "AI"
-        return True
+    """Check if there's a winner after 5 attempts"""
+    if st.session_state.attempt_count >= 5:
+        if st.session_state.player_score > st.session_state.ai_score:
+            st.session_state.winner = "Player"
+            return True
+        elif st.session_state.ai_score > st.session_state.player_score:
+            st.session_state.winner = "AI"
+            return True
+        else:
+            st.session_state.winner = "Draw"
+            return True
     return False
 
-def process_player_answer(clue_id: int, answer: str):
-    """Process player's answer"""
+def process_simultaneous_attempt(clue_id: int, answer: str):
+    """Process simultaneous attempt by player and AI"""
     clue = next((c for c in st.session_state.puzzle_data['clues'] if c['id'] == clue_id), None)
     
+    # Player's attempt
     if clue and answer.upper().strip() == clue['answer']:
         st.session_state.player_score += 5  # Fixed 5 points for correct answer
-        st.session_state.solved_clues.add(clue_id)
-        st.session_state.feedback_message = "Correct!"
+        st.session_state.feedback_message = "Your answer: Correct!"
         st.session_state.feedback_type = "correct"
     else:
-        st.session_state.feedback_message = "Wrong!"
+        st.session_state.feedback_message = "Your answer: Wrong!"
         st.session_state.feedback_type = "incorrect"
     
-    # AI takes turn after every user turn
-    st.session_state.ai_thinking = True
+    # AI's simultaneous attempt
+    available_clues = [c for c in st.session_state.puzzle_data['clues'] if c['id'] == clue_id and c['id'] not in st.session_state.solved_clues]
+    if available_clues:
+        selected_clue = available_clues[0]
+        if st.session_state.ai_player.attempt_answer(selected_clue):
+            st.session_state.ai_score += 5  # Fixed 5 points for correct answer
+            st.session_state.solved_clues.add(selected_clue['id'])
+            st.session_state.feedback_message += f" | AI's answer: Correct! ({selected_clue['answer']})"
+            st.session_state.feedback_type = "correct" if st.session_state.feedback_type == "correct" else "mixed"
+        else:
+            st.session_state.feedback_message += f" | AI's answer: Wrong! (Incorrect attempt)"
+            st.session_state.feedback_type = "incorrect" if st.session_state.feedback_type == "incorrect" else "mixed"
+    
+    # Increment attempt count and move to next clue
+    st.session_state.attempt_count += 1
+    st.session_state.current_clue_index = min(st.session_state.attempt_count, len(st.session_state.puzzle_data['clues']) - 1)
+    check_winner()
     st.rerun()
-
-def ai_turn():
-    """Execute AI turn"""
-    if st.session_state.ai_thinking:
-        available_clues = [c for c in st.session_state.puzzle_data['clues'] 
-                          if c['id'] not in st.session_state.solved_clues]
-        
-        if available_clues:
-            selected_clue = st.session_state.ai_player.select_clue(available_clues)
-            
-            if selected_clue:
-                if st.session_state.ai_player.attempt_answer(selected_clue):
-                    st.session_state.ai_score += 5  # Fixed 5 points for correct answer
-                    st.session_state.solved_clues.add(selected_clue['id'])
-                    st.session_state.feedback_message = f"AI Correct: {selected_clue['clue']} → {selected_clue['answer']}"
-                    st.session_state.feedback_type = "ai_correct"
-                else:
-                    st.session_state.feedback_message = f"AI Wrong: {selected_clue['clue']} → (Incorrect attempt)"
-                    st.session_state.feedback_type = "ai_incorrect"
-                check_winner()
-        
-        st.session_state.ai_thinking = False
 
 def main():
     """Main Streamlit application"""
@@ -402,14 +423,9 @@ def main():
     st.markdown("""
     <div class="game-header">
         <h1>🧩 Crossword Battle Game</h1>
-        <p>Compete against AI to solve crossword puzzles and reach 20 points first!</p>
+        <p>Compete against AI to score the most points in 5 simultaneous attempts!</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Handle AI turn if needed
-    if st.session_state.get('ai_thinking', False):
-        ai_turn()
-        st.rerun()
     
     # Game setup or active game
     if not st.session_state.game_active:
@@ -470,14 +486,21 @@ def main():
                 st.markdown("""
                 <div class="winner-banner">
                     <h2>🎈 YOU WON! 🎈</h2>
-                    <p>You reached 20 points first!</p>
+                    <p>You scored the most points in 5 attempts!</p>
                 </div>
                 """, unsafe_allow_html=True)
-            else:
+            elif st.session_state.winner == "AI":
                 st.markdown("""
                 <div class="loser-banner">
                     <h2>😢 YOU LOSE! 😢</h2>
-                    <p>AI reached 20 points first!</p>
+                    <p>AI scored the most points in 5 attempts!</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:  # Draw
+                st.markdown("""
+                <div class="draw-banner">
+                    <h2>🤝 DRAW! 🤝</h2>
+                    <p>The score is tied after 5 attempts!</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -500,15 +523,14 @@ def main():
                 st.rerun()
         
         else:
-            # Score display
-            col1, col2 = st.columns(2)
+            # Score and attempt count display
+            col1, col2, col3 = st.columns([1, 1, 1])
             
             with col1:
                 st.markdown(f"""
                 <div class="score-card">
                     <h3>👤 Your Score</h3>
                     <h2>{st.session_state.player_score}</h2>
-                    <p>Target: 20 points</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -517,13 +539,20 @@ def main():
                 <div class="ai-score-card">
                     <h3>🤖 AI Score</h3>
                     <h2>{st.session_state.ai_score}</h2>
-                    <p>Target: 20 points</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div class="score-card">
+                    <h3>Attempts Left</h3>
+                    <h2>{max(0, 5 - st.session_state.attempt_count)}</h2>
                 </div>
                 """, unsafe_allow_html=True)
             
             # Feedback message
             if st.session_state.feedback_message:
-                if st.session_state.feedback_type == "correct":
+                if st.session_state.feedback_type in ["correct", "mixed"]:
                     st.markdown(f"""
                     <div class="feedback-correct">
                         <strong>{st.session_state.feedback_message}</strong>
@@ -535,52 +564,33 @@ def main():
                         <strong>{st.session_state.feedback_message}</strong>
                     </div>
                     """, unsafe_allow_html=True)
-                elif st.session_state.feedback_type == "ai_correct":
-                    st.markdown(f"""
-                    <div class="feedback-correct">
-                        <strong>{st.session_state.feedback_message}</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
-                elif st.session_state.feedback_type == "ai_incorrect":
-                    st.markdown(f"""
-                    <div class="feedback-incorrect">
-                        <strong>{st.session_state.feedback_message}</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
             
-            # Clues display
-            st.markdown("### Available Clues")
-            
-            available_clues = [c for c in st.session_state.puzzle_data['clues'] 
-                             if c['id'] not in st.session_state.solved_clues]
-            
-            if available_clues:
-                for clue in available_clues:
-                    with st.container():
-                        st.markdown(f"""
-                        <div class="clue-card">
-                            <strong>{clue['id']}. {clue['clue']}</strong><br>
-                            <small>{clue['direction'].title()} • {len(clue['answer'])} letters • 5 points</small>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        col1, col2 = st.columns([3, 1])
-                        with col1:
-                            answer = st.text_input(
-                                f"Your answer for clue {clue['id']}:",
-                                key=f"answer_{clue['id']}",
-                                placeholder=f"Enter {len(clue['answer'])} letter word..."
-                            )
-                        with col2:
-                            if st.button(f"Submit", key=f"submit_{clue['id']}"):
-                                if answer.strip():
-                                    process_player_answer(clue['id'], answer)
-                                    st.rerun()
-                        
-                        st.markdown("---")
+            # Current clue display
+            st.markdown("### Current Clue")
+            if st.session_state.attempt_count < 5:
+                current_clue = st.session_state.puzzle_data['clues'][st.session_state.current_clue_index]
+                st.markdown(f"""
+                <div class="clue-card">
+                    <strong>{current_clue['id']}. {current_clue['clue']}</strong><br>
+                    <small>{current_clue['direction'].title()} • {len(current_clue['answer'])} letters • 5 points</small>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    answer = st.text_input(
+                        f"Your answer:",
+                        key=f"answer_{st.session_state.current_clue_index}",
+                        placeholder=f"Enter {len(current_clue['answer'])} letter word..."
+                    )
+                with col2:
+                    if st.button(f"Submit", key=f"submit_{st.session_state.current_clue_index}"):
+                        if answer.strip():
+                            process_simultaneous_attempt(current_clue['id'], answer)
+                            st.rerun()
             else:
-                st.success("All clues solved! Great job!")
-            
+                st.success("Game over! All 5 attempts completed.")
+
             # Game controls
             col1, col2 = st.columns(2)
             with col1:
