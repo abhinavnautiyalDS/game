@@ -37,6 +37,7 @@ st.markdown("""
         text-align: center;
         border-left: 4px solid #007bff;
         margin-bottom: 1rem;
+        color: #000000; /* Set font color to black */
     }
     
     .ai-score-card {
@@ -46,6 +47,7 @@ st.markdown("""
         text-align: center;
         border-left: 4px solid #dc3545;
         margin-bottom: 1rem;
+        color: #000000; /* Set font color to black */
     }
     
     .crossword-grid {
