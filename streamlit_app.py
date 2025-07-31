@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern styling
+# Custom CSS for modern styling with updated font color for white boxes
 st.markdown("""
 <style>
     .main {
@@ -54,6 +54,7 @@ st.markdown("""
         padding: 2rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin: 1rem 0;
+        color: #000000; /* Set font color to black */
     }
     
     .clue-card {
@@ -63,11 +64,17 @@ st.markdown("""
         padding: 1rem;
         margin-bottom: 0.5rem;
         transition: all 0.3s ease;
+        color: #000000; /* Set font color to black */
     }
     
     .clue-card:hover {
         background: #f8f9fa;
         border-color: #007bff;
+        color: #000000; /* Ensure hover state text is black */
+    }
+    
+    .clue-card strong, .clue-card small {
+        color: #000000; /* Ensure nested elements have black text */
     }
     
     .feedback-correct {
