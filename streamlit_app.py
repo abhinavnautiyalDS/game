@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern styling with updated font color for white boxes and pop-up
+# Custom CSS for modern styling with updated font color for white boxes and pop-ups
 st.markdown("""
 <style>
     .main {
@@ -104,7 +104,12 @@ st.markdown("""
         border-radius: 15px;
         text-align: center;
         margin: 2rem 0;
-        animation: pulse 2s infinite;
+        animation: celebrate 2s infinite;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
     }
     
     .loser-banner {
@@ -114,13 +119,24 @@ st.markdown("""
         border-radius: 15px;
         text-align: center;
         margin: 2rem 0;
-        animation: pulse 2s infinite;
+        animation: sad 2s infinite;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
     }
     
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
+    @keyframes celebrate {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.1); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    @keyframes sad {
+        0% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(0.9); }
+        100% { transform: translate(-50%, -50%) scale(1); }
     }
     
     .stButton > button {
@@ -346,7 +362,7 @@ def process_player_answer(clue_id: int, answer: str):
         st.session_state.feedback_message = "Correct!"
         st.session_state.feedback_type = "correct"
     else:
-        st.session_state.feedback_message = "Incorrect answer"
+        st.session_state.feedback_message = "Wrong!"
         st.session_state.feedback_type = "incorrect"
     
     # AI takes turn after every user turn
@@ -362,11 +378,15 @@ def ai_turn():
         if available_clues:
             selected_clue = st.session_state.ai_player.select_clue(available_clues)
             
-            if selected_clue and st.session_state.ai_player.attempt_answer(selected_clue):
-                st.session_state.ai_score += 5  # Fixed 5 points for correct answer
-                st.session_state.solved_clues.add(selected_clue['id'])
-                st.session_state.feedback_message = f"AI solved: {selected_clue['clue']} → {selected_clue['answer']}"
-                st.session_state.feedback_type = "ai_correct"
+            if selected_clue:
+                if st.session_state.ai_player.attempt_answer(selected_clue):
+                    st.session_state.ai_score += 5  # Fixed 5 points for correct answer
+                    st.session_state.solved_clues.add(selected_clue['id'])
+                    st.session_state.feedback_message = f"AI Correct: {selected_clue['clue']} → {selected_clue['answer']}"
+                    st.session_state.feedback_type = "ai_correct"
+                else:
+                    st.session_state.feedback_message = f"AI Wrong: {selected_clue['clue']} → (Incorrect attempt)"
+                    st.session_state.feedback_type = "ai_incorrect"
                 check_winner()
         
         st.session_state.ai_thinking = False
@@ -449,14 +469,14 @@ def main():
             if st.session_state.winner == "Player":
                 st.markdown("""
                 <div class="winner-banner">
-                    <h2>🎉 You Win! 🎉</h2>
+                    <h2>🎈 YOU WON! 🎈</h2>
                     <p>You reached 20 points first!</p>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
                 <div class="loser-banner">
-                    <h2>😞 You Lose!</h2>
+                    <h2>😢 YOU LOSE! 😢</h2>
                     <p>AI reached 20 points first!</p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -515,8 +535,18 @@ def main():
                         <strong>{st.session_state.feedback_message}</strong>
                     </div>
                     """, unsafe_allow_html=True)
-                else:
-                    st.info(st.session_state.feedback_message)
+                elif st.session_state.feedback_type == "ai_correct":
+                    st.markdown(f"""
+                    <div class="feedback-correct">
+                        <strong>{st.session_state.feedback_message}</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                elif st.session_state.feedback_type == "ai_incorrect":
+                    st.markdown(f"""
+                    <div class="feedback-incorrect">
+                        <strong>{st.session_state.feedback_message}</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
             
             # Clues display
             st.markdown("### Available Clues")
