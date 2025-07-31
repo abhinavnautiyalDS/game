@@ -318,10 +318,10 @@ def start_new_game(difficulty: str):
 
 def check_winner():
     """Check if there's a winner"""
-    if st.session_state.player_score >= 100:
+    if st.session_state.player_score >= 20:
         st.session_state.winner = "Player"
         return True
-    elif st.session_state.ai_score >= 100:
+    elif st.session_state.ai_score >= 20:
         st.session_state.winner = "AI"
         return True
     return False
@@ -337,12 +337,12 @@ def process_player_answer(clue_id: int, answer: str):
         st.session_state.feedback_type = "correct"
         
         if not check_winner():
-            # Trigger AI turn
-            st.session_state.ai_thinking = True
-            st.rerun()
+            st.session_state.ai_thinking = False  # No AI turn after correct answer
     else:
         st.session_state.feedback_message = "Incorrect answer"
         st.session_state.feedback_type = "incorrect"
+        st.session_state.ai_thinking = True  # Trigger AI turn after incorrect answer
+        st.rerun()
 
 def ai_turn():
     """Execute AI turn"""
@@ -373,7 +373,7 @@ def main():
     st.markdown("""
     <div class="game-header">
         <h1>🧩 Crossword Battle Game</h1>
-        <p>Compete against AI to solve crossword puzzles and reach 100 points first!</p>
+        <p>Compete against AI to solve crossword puzzles and reach 20 points first!</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -441,7 +441,7 @@ def main():
                 st.markdown("""
                 <div class="winner-banner">
                     <h2>🎉 Congratulations! You Won! 🎉</h2>
-                    <p>You reached 100 points first!</p>
+                    <p>You reached 20 points first!</p>
                 </div>
                 """, unsafe_allow_html=True)
             else:
@@ -479,7 +479,7 @@ def main():
                 <div class="score-card">
                     <h3>👤 Your Score</h3>
                     <h2>{st.session_state.player_score}</h2>
-                    <p>Target: 100 points</p>
+                    <p>Target: 20 points</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -488,7 +488,7 @@ def main():
                 <div class="ai-score-card">
                     <h3>🤖 AI Score</h3>
                     <h2>{st.session_state.ai_score}</h2>
-                    <p>Target: 100 points</p>
+                    <p>Target: 20 points</p>
                 </div>
                 """, unsafe_allow_html=True)
             
