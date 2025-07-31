@@ -139,29 +139,29 @@ class CrosswordData:
             'clues': [
                 {'id': 1, 'clue': 'Domestic animal that barks', 'answer': 'DOG', 'row': 0, 'col': 0, 'direction': 'across', 'points': 5},
                 {'id': 2, 'clue': 'Feline pet', 'answer': 'CAT', 'row': 2, 'col': 0, 'direction': 'across', 'points': 5},
-                {'id': 3, 'clue': 'Color of the sky', 'answer': 'BLUE', 'row': 4, 'col': 1, 'direction': 'across', 'points': 10},
-                {'id': 4, 'clue': 'Opposite of hot', 'answer': 'COLD', 'row': 0, 'col': 5, 'direction': 'down', 'points': 10},
+                {'id': 3, 'clue': 'Color of the sky', 'answer': 'BLUE', 'row': 4, 'col': 1, 'direction': 'across', 'points': 5},
+                {'id': 4, 'clue': 'Opposite of hot', 'answer': 'COLD', 'row': 0, 'col': 5, 'direction': 'down', 'points': 5},
                 {'id': 5, 'clue': 'Large body of water', 'answer': 'SEA', 'row': 6, 'col': 2, 'direction': 'across', 'points': 5},
             ]
         },
         'medium': {
             'grid_size': (10, 10),
             'clues': [
-                {'id': 1, 'clue': 'Capital of France', 'answer': 'PARIS', 'row': 0, 'col': 0, 'direction': 'across', 'points': 15},
-                {'id': 2, 'clue': 'Largest planet in our solar system', 'answer': 'JUPITER', 'row': 2, 'col': 1, 'direction': 'across', 'points': 20},
-                {'id': 3, 'clue': 'Programming language named after a snake', 'answer': 'PYTHON', 'row': 4, 'col': 0, 'direction': 'across', 'points': 20},
-                {'id': 4, 'clue': 'Chemical symbol for gold', 'answer': 'AU', 'row': 6, 'col': 3, 'direction': 'down', 'points': 15},
-                {'id': 5, 'clue': 'Author of Romeo and Juliet', 'answer': 'SHAKESPEARE', 'row': 7, 'col': 0, 'direction': 'across', 'points': 25},
+                {'id': 1, 'clue': 'Capital of France', 'answer': 'PARIS', 'row': 0, 'col': 0, 'direction': 'across', 'points': 5},
+                {'id': 2, 'clue': 'Largest planet in our solar system', 'answer': 'JUPITER', 'row': 2, 'col': 1, 'direction': 'across', 'points': 5},
+                {'id': 3, 'clue': 'Programming language named after a snake', 'answer': 'PYTHON', 'row': 4, 'col': 0, 'direction': 'across', 'points': 5},
+                {'id': 4, 'clue': 'Chemical symbol for gold', 'answer': 'AU', 'row': 6, 'col': 3, 'direction': 'down', 'points': 5},
+                {'id': 5, 'clue': 'Author of Romeo and Juliet', 'answer': 'SHAKESPEARE', 'row': 7, 'col': 0, 'direction': 'across', 'points': 5},
             ]
         },
         'hard': {
             'grid_size': (12, 12),
             'clues': [
-                {'id': 1, 'clue': 'Study of the fundamental nature of reality', 'answer': 'METAPHYSICS', 'row': 0, 'col': 0, 'direction': 'across', 'points': 30},
-                {'id': 2, 'clue': 'Mathematical constant approximately 3.14159', 'answer': 'PI', 'row': 2, 'col': 5, 'direction': 'down', 'points': 25},
-                {'id': 3, 'clue': 'Process by which plants make food', 'answer': 'PHOTOSYNTHESIS', 'row': 4, 'col': 0, 'direction': 'across', 'points': 35},
-                {'id': 4, 'clue': 'Ancient Greek philosopher taught by Plato', 'answer': 'ARISTOTLE', 'row': 6, 'col': 2, 'direction': 'across', 'points': 30},
-                {'id': 5, 'clue': 'Quantum physics principle about uncertainty', 'answer': 'HEISENBERG', 'row': 8, 'col': 1, 'direction': 'across', 'points': 35},
+                {'id': 1, 'clue': 'Study of the fundamental nature of reality', 'answer': 'METAPHYSICS', 'row': 0, 'col': 0, 'direction': 'across', 'points': 5},
+                {'id': 2, 'clue': 'Mathematical constant approximately 3.14159', 'answer': 'PI', 'row': 2, 'col': 5, 'direction': 'down', 'points': 5},
+                {'id': 3, 'clue': 'Process by which plants make food', 'answer': 'PHOTOSYNTHESIS', 'row': 4, 'col': 0, 'direction': 'across', 'points': 5},
+                {'id': 4, 'clue': 'Ancient Greek philosopher taught by Plato', 'answer': 'ARISTOTLE', 'row': 6, 'col': 2, 'direction': 'across', 'points': 5},
+                {'id': 5, 'clue': 'Quantum physics principle about uncertainty', 'answer': 'HEISENBERG', 'row': 8, 'col': 1, 'direction': 'across', 'points': 5},
             ]
         }
     }
@@ -318,10 +318,10 @@ def start_new_game(difficulty: str):
 
 def check_winner():
     """Check if there's a winner"""
-    if st.session_state.player_score >= 15:
+    if st.session_state.player_score >= 20:
         st.session_state.winner = "Player"
         return True
-    elif st.session_state.ai_score >= 15:
+    elif st.session_state.ai_score >= 20:
         st.session_state.winner = "AI"
         return True
     return False
@@ -331,7 +331,7 @@ def process_player_answer(clue_id: int, answer: str):
     clue = next((c for c in st.session_state.puzzle_data['clues'] if c['id'] == clue_id), None)
     
     if clue and answer.upper().strip() == clue['answer']:
-        st.session_state.player_score += clue['points']
+        st.session_state.player_score += 5  # Fixed 5 points for correct answer
         st.session_state.solved_clues.add(clue_id)
         st.session_state.feedback_message = "Correct!"
         st.session_state.feedback_type = "correct"
@@ -354,7 +354,7 @@ def ai_turn():
             selected_clue = st.session_state.ai_player.select_clue(available_clues)
             
             if selected_clue and st.session_state.ai_player.attempt_answer(selected_clue):
-                st.session_state.ai_score += selected_clue['points']
+                st.session_state.ai_score += 5  # Fixed 5 points for correct answer
                 st.session_state.solved_clues.add(selected_clue['id'])
                 st.session_state.feedback_message = f"AI solved: {selected_clue['clue']} → {selected_clue['answer']}"
                 st.session_state.feedback_type = "ai_correct"
@@ -373,7 +373,7 @@ def main():
     st.markdown("""
     <div class="game-header">
         <h1>🧩 Crossword Battle Game</h1>
-        <p>Compete against AI to solve crossword puzzles and reach 15 points first!</p>
+        <p>Compete against AI to solve crossword puzzles and reach 20 points first!</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -521,7 +521,7 @@ def main():
                         st.markdown(f"""
                         <div class="clue-card">
                             <strong>{clue['id']}. {clue['clue']}</strong><br>
-                            <small>{clue['direction'].title()} • {len(clue['answer'])} letters • {clue['points']} points</small>
+                            <small>{clue['direction'].title()} • {len(clue['answer'])} letters • 5 points</small>
                         </div>
                         """, unsafe_allow_html=True)
                         
