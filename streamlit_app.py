@@ -318,10 +318,10 @@ def start_new_game(difficulty: str):
 
 def check_winner():
     """Check if there's a winner"""
-    if st.session_state.player_score >= 20:
+    if st.session_state.player_score >= 15:
         st.session_state.winner = "Player"
         return True
-    elif st.session_state.ai_score >= 20:
+    elif st.session_state.ai_score >= 15:
         st.session_state.winner = "AI"
         return True
     return False
@@ -373,7 +373,7 @@ def main():
     st.markdown("""
     <div class="game-header">
         <h1>🧩 Crossword Battle Game</h1>
-        <p>Compete against AI to solve crossword puzzles and reach 20 points first!</p>
+        <p>Compete against AI to solve crossword puzzles and reach 15 points first!</p>
     </div>
     """, unsafe_allow_html=True)
     
