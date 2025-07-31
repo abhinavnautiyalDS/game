@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern styling with updated font color for white boxes
+# Custom CSS for modern styling with updated font color for white boxes and pop-up
 st.markdown("""
 <style>
     .main {
@@ -99,6 +99,16 @@ st.markdown("""
     
     .winner-banner {
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin: 2rem 0;
+        animation: pulse 2s infinite;
+    }
+    
+    .loser-banner {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         color: white;
         padding: 2rem;
         border-radius: 15px;
@@ -335,14 +345,13 @@ def process_player_answer(clue_id: int, answer: str):
         st.session_state.solved_clues.add(clue_id)
         st.session_state.feedback_message = "Correct!"
         st.session_state.feedback_type = "correct"
-        
-        if not check_winner():
-            st.session_state.ai_thinking = False  # No AI turn after correct answer
     else:
         st.session_state.feedback_message = "Incorrect answer"
         st.session_state.feedback_type = "incorrect"
-        st.session_state.ai_thinking = True  # Trigger AI turn after incorrect answer
-        st.rerun()
+    
+    # AI takes turn after every user turn
+    st.session_state.ai_thinking = True
+    st.rerun()
 
 def ai_turn():
     """Execute AI turn"""
@@ -440,15 +449,15 @@ def main():
             if st.session_state.winner == "Player":
                 st.markdown("""
                 <div class="winner-banner">
-                    <h2>🎉 Congratulations! You Won! 🎉</h2>
+                    <h2>🎉 You Win! 🎉</h2>
                     <p>You reached 20 points first!</p>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
-                <div class="winner-banner">
-                    <h2>🤖 AI Wins This Round!</h2>
-                    <p>Better luck next time!</p>
+                <div class="loser-banner">
+                    <h2>😞 You Lose!</h2>
+                    <p>AI reached 20 points first!</p>
                 </div>
                 """, unsafe_allow_html=True)
             
