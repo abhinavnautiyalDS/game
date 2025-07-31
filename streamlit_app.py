@@ -409,8 +409,8 @@ def process_simultaneous_attempt(clue_id: int, answer: str):
     # Increment attempt count and move to next clue
     st.session_state.attempt_count += 1
     st.session_state.current_clue_index = min(st.session_state.attempt_count, len(st.session_state.puzzle_data['clues']) - 1)
-    check_winner()
-    st.rerun()
+    if not check_winner():  # Only rerun if game is not over
+        st.rerun()
 
 def main():
     """Main Streamlit application"""
@@ -486,21 +486,21 @@ def main():
                 st.markdown("""
                 <div class="winner-banner">
                     <h2>🎈 YOU WON! 🎈</h2>
-                    <p>You scored the most points in 5 attempts!</p>
+                    <p>You scored more points than AI in 5 attempts!</p>
                 </div>
                 """, unsafe_allow_html=True)
             elif st.session_state.winner == "AI":
                 st.markdown("""
                 <div class="loser-banner">
                     <h2>😢 YOU LOSE! 😢</h2>
-                    <p>AI scored the most points in 5 attempts!</p>
+                    <p>AI scored more points than you in 5 attempts!</p>
                 </div>
                 """, unsafe_allow_html=True)
             else:  # Draw
                 st.markdown("""
                 <div class="draw-banner">
                     <h2>🤝 DRAW! 🤝</h2>
-                    <p>The score is tied after 5 attempts!</p>
+                    <p>The score is equal after 5 attempts!</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -587,9 +587,9 @@ def main():
                     if st.button(f"Submit", key=f"submit_{st.session_state.current_clue_index}"):
                         if answer.strip():
                             process_simultaneous_attempt(current_clue['id'], answer)
-                            st.rerun()
             else:
                 st.success("Game over! All 5 attempts completed.")
+                check_winner()  # Ensure winner is checked if not already done
 
             # Game controls
             col1, col2 = st.columns(2)
